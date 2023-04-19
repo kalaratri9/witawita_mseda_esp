@@ -1,0 +1,22 @@
+microservice: bankregistration-api
+server:
+  port: 8066
+spring:
+  application:
+    name: bankRegistration-api
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME}
+    hikari:
+      connectionTimeout: 30000
+      idleTimeout: 600000
+      maxLifetime: 1800000
+      maximumPoolSize: 10
+      minimumIdle: 5
+
+eventuate:
+  database:
+    schema: bank_registration
+  eventDispatcherId: localBankRegistrationDomainEventDispatcher

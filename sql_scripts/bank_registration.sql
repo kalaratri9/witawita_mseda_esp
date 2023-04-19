@@ -25,12 +25,13 @@ AUTO_INCREMENT = 1;
 
 -- CREATE TABLE "message" ---------------------------------------
 CREATE TABLE `message` (
-  `id` VarChar(255) PRIMARY KEY,
-  `destination` VarChar(1000) NOT NULL,
-  `headers` VarChar(1000) NOT NULL,
-  `payload` VarChar(3000) NOT NULL,
-  `creation_time` BIGINT,
-  `published` VarChar(1) default '0'
+  `id` VARCHAR(255) PRIMARY KEY,
+  `destination` LONGTEXT NOT NULL,
+  `headers` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `payload` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `published` SMALLINT DEFAULT 0,
+  `message_partition` SMALLINT,
+  `creation_time` BIGINT
 );
 -- -------------------------------------------------------------
 

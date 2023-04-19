@@ -1,0 +1,129 @@
+# sudo docker-compose up -d
+# sudo docker-compose down -v
+
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:5.6
+    container_name: mysql
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: ${PASS_DEFAULT}
+    volumes:
+      - ../sql_scripts:/docker-entrypoint-initdb.d
+      - ./mysql:/var/lib/mysql
+    restart: unless-stopped
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.2
+    container_name: zookeeper
+    healthcheck:
+      test: jps | grep Quorum
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    ports:
+      - 2181:2181
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - ./zookeeper/data:/var/lib/zookeeper/data
+      - ./zookeeper/log:/var/lib/zookeeper/log
+    restart: unless-stopped
+  kafka:
+    image: confluentinc/cp-kafka:7.3.2
+    container_name: kafka
+    healthcheck:
+      test: jps | grep Kafka
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - 9092:9092
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://127.0.0.1:9092,LISTENER_EXTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,LISTENER_EXTERNAL:PLAINTEXT
+    volumes:
+      - ./kafka:/var/lib/kafka/data
+    restart: unless-stopped
+  eventuateio:
+    image: eventuateio/eventuate-cdc-service:0.15.0.RELEASE
+    container_name: eventuateio
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      mysql:
+        condition: service_started
+    environment:
+      #CONFIG
+      EVENTUATE_CDC_TYPE: EventuateTram
+      EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING: zookeeper:2181
+
+      #READER
+      EVENTUATE_CDC_READER_BANKREGISTRATION_TYPE: polling
+      EVENTUATE_CDC_READER_BANKREGISTRATION_DATASOURCEURL: jdbc:mysql://mysql:3306/bank_registration?allowPublicKeyRetrieval=true&autoReconnect=true&useSSL=false&serverTimezone=UTC
+      EVENTUATE_CDC_READER_BANKREGISTRATION_DATASOURCEUSERNAME: ${USER_DEFAULT}
+      EVENTUATE_CDC_READER_BANKREGISTRATION_DATASOURCEPASSWORD: ${PASS_DEFAULT}
+      EVENTUATE_CDC_READER_BANKREGISTRATION_DATASOURCEDRIVERCLASSNAME: com.mysql.cj.jdbc.Driver
+      EVENTUATE_CDC_READER_BANKREGISTRATION_LEADERSHIPLOCKPATH: /eventuate/cdc/leader/eventuatetram/1
+      EVENTUATE_CDC_READER_BANKREGISTRATION_OUTBOXID: 1
+
+      #PIPELINE
+      EVENTUATE_CDC_PIPELINE_BANKREGISTRATION_TYPE: eventuate-tram
+      EVENTUATE_CDC_PIPELINE_BANKREGISTRATION_EVENTUATEDATABASESCHEMA: bank_registration
+      EVENTUATE_CDC_PIPELINE_BANKREGISTRATION_SOURCETABLENAME: message
+      EVENTUATE_CDC_PIPELINE_BANKREGISTRATION_READER: bankregistration
+    restart: unless-stopped
+  java-01:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    image: atomic/java-service:1.0.0-SNAPSHOT
+    command: sh -c "java -jar /opt/bank/app.jar --spring.config.location='file:/opt/bank/application.yml'"
+    container_name: bank
+    depends_on:
+      eventuateio:
+        condition: service_healthy
+      mysql:
+        condition: service_started
+    ports:
+      - 8066:8066
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/bank_registration?allowPublicKeyRetrieval=true&autoReconnect=true&useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${USER_DEFAULT}
+      SPRING_DATASOURCE_PASSWORD: ${PASS_DEFAULT}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+    restart: unless-stopped
+  java-02:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    image: atomic/java-service:1.0.0-SNAPSHOT
+    command: sh -c "java -jar /opt/oath/app.jar --spring.config.location='file:/opt/oath/application.yml'"
+    container_name: oath
+    depends_on:
+      eventuateio:
+        condition: service_healthy
+      mysql:
+        condition: service_started
+    ports:
+      - 8067:8067
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/oath?allowPublicKeyRetrieval=true&autoReconnect=true&useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${USER_DEFAULT}
+      SPRING_DATASOURCE_PASSWORD: ${PASS_DEFAULT}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+      EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    restart: unless-stopped

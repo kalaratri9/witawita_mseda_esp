@@ -90,3 +90,17 @@ target
 secrets.yml
 .gradletasknamecache
 .sts4-cache
+
+# Custom
+docker/kafka/*
+docker/mysql/*
+docker/zookeeper/*
+docker/zookeeper/data/*
+docker/zookeeper/log/*
+
+!docker/kafka/.gitkeep 
+!docker/mysql/.gitkeep 
+!docker/zookeeper/data
+!docker/zookeeper/log
+!docker/zookeeper/data/.gitkeep 
+!docker/zookeeper/log/.gitkeep 

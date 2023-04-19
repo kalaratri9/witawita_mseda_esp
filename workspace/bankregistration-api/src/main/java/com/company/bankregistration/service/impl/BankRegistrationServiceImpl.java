@@ -1,7 +1,8 @@
 package com.company.bankregistration.service.impl;
 
-import java.util.Arrays;
+import com.atomic32.event.commons.utils.EventThreadContextUtils;
 
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,7 @@ import io.eventuate.tram.events.publisher.DomainEventPublisher;
 @Service
 public class BankRegistrationServiceImpl implements BankRegistrationService {
 
-	private static Logger logger = LoggerFactory.getLogger(BankRegistrationServiceImpl.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(BankRegistrationServiceImpl.class);
 
 	@Autowired
 	private DomainEventPublisher domainEventPublisher;
@@ -31,13 +32,15 @@ public class BankRegistrationServiceImpl implements BankRegistrationService {
 		bankCustomerData.setBankEnrolled(true);
 		bankCustomerData.setCustomerId(customerId);
 		bankCustomerDataRepository.save(bankCustomerData);
+
 		BankCustomerDataCreated bankCustomerDataCreated = new BankCustomerDataCreated(
 				bankCustomerData.getBankCustomerDataId(), bankCustomerData.getClientId(), bankCustomerData.getBpId(),
 				bankCustomerData.getDigitalBankId(), bankCustomerData.getCustomerId());
+		EventThreadContextUtils.populateFromSlf4jMDCData(bankCustomerDataCreated);
 		domainEventPublisher.publish(BankCustomerData.class, bankCustomerData.getBankCustomerDataId(),
-				Arrays.asList(bankCustomerDataCreated));
+				List.of(bankCustomerDataCreated));
 
-		logger.info("BankClientData created successfully");
+		LOGGER.info("BankClientData created successfully");
 	}
 
 }

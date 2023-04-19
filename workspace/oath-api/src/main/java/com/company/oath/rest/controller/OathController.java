@@ -7,11 +7,11 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 import javax.validation.Valid;
-import javax.ws.rs.core.MediaType;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -48,10 +48,10 @@ public class  OathController {
 			@ApiResponse(code = 500, message = "INTERNAL SERVER ERROR", response = OathErrorMessageDTO.class)})
 	@GetMapping(path="/",
 			produces = {
-				MediaType.APPLICATION_JSON
+				MediaType.APPLICATION_JSON_VALUE
 			},
 			consumes = {
-				MediaType.APPLICATION_JSON
+				MediaType.APPLICATION_JSON_VALUE
 			})
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<OathDTO> getById(@ApiParam(value = "Id to Oath will be get", required = true) @PathVariable Integer id) {
@@ -74,10 +74,10 @@ public class  OathController {
 			@ApiResponse(code = 500, message = "INTERNAL SERVER ERROR", response = OathErrorMessageDTO.class)})
 	@PostMapping(path="/",
 			produces = {
-				MediaType.APPLICATION_JSON
+				MediaType.APPLICATION_JSON_VALUE
 			},
 			consumes = {
-				MediaType.APPLICATION_JSON
+				MediaType.APPLICATION_JSON_VALUE
 			})
 	@ResponseStatus(HttpStatus.CREATED)
 	public ResponseEntity<OathDTO> create(@ApiParam(value = "Oath will be create", required = true) @RequestBody @Valid OathDTO oath, UriComponentsBuilder builder) {

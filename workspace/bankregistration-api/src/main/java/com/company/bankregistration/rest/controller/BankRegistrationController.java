@@ -1,13 +1,13 @@
 package com.company.bankregistration.rest.controller;
 
 import javax.validation.Valid;
-import javax.ws.rs.core.MediaType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -74,8 +74,8 @@ public class BankRegistrationController {
 			@ApiResponse(code = 401, message = "UNAUTHORIZED"),
 			@ApiResponse(code = 404, message = "NOT FOUND"),
 			@ApiResponse(code = 500, message = "INTERNAL SERVER ERROR")})
-	@PostMapping(path = "/bank-client-data", produces = { MediaType.APPLICATION_JSON }, consumes = {
-			MediaType.APPLICATION_JSON })
+	@PostMapping(path = "/bank-client-data", produces = { MediaType.APPLICATION_JSON_VALUE }, consumes = {
+			MediaType.APPLICATION_JSON_VALUE })
 	@ResponseStatus(HttpStatus.CREATED)
 	public ResponseEntity<BankClientDataDTO> saveBankClientData(
 			@ApiParam(value = "Customer core will be validated", required = true) @RequestBody @Valid BankClientDataDTO bankClientDataDTO,

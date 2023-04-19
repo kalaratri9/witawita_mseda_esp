@@ -13,14 +13,14 @@ import io.eventuate.common.jdbc.EventuateSchema;
 import io.eventuate.common.jdbc.EventuateTransactionTemplate;
 import io.eventuate.tram.consumer.common.DuplicateMessageDetector;
 import io.eventuate.tram.consumer.jdbc.SqlTableBasedDuplicateMessageDetector;
-import io.eventuate.tram.consumer.rabbitmq.EventuateTramRabbitMQMessageConsumerConfiguration;
+import io.eventuate.tram.spring.consumer.kafka.EventuateTramKafkaMessageConsumerConfiguration;
 import io.eventuate.tram.events.subscriber.DomainEventDispatcher;
 import io.eventuate.tram.events.subscriber.DomainEventDispatcherFactory;
 import io.eventuate.tram.spring.events.subscriber.TramEventSubscriberConfiguration;
 import io.eventuate.tram.spring.messaging.producer.jdbc.TramMessageProducerJdbcConfiguration;
 
 @Configuration
-@Import({EventuateTramRabbitMQMessageConsumerConfiguration.class, TramEventSubscriberConfiguration.class, TramMessageProducerJdbcConfiguration.class})
+@Import({EventuateTramKafkaMessageConsumerConfiguration.class, TramEventSubscriberConfiguration.class, TramMessageProducerJdbcConfiguration.class})
 public class DomainEventsConsumerConfiguration {
 	
 	@Value("${eventuate.eventDispatcherId}")

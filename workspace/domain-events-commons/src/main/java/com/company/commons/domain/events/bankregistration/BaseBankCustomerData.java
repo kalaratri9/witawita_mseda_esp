@@ -1,6 +1,8 @@
 package com.company.commons.domain.events.bankregistration;
 
-public class BaseBankCustomerData {
+import com.atomic32.event.commons.BaseEvent;
+
+public class BaseBankCustomerData extends BaseEvent {
 
 	private Long bankCustomerDataId;
 	private Long clientId;
