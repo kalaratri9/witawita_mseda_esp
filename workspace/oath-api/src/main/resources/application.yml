@@ -23,3 +23,6 @@ eventuatelocal:
   kafka:
     bootstrap:
       servers: ${EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS}
+  zookeeper:
+    connection:
+      string: zookeeper:2181
