@@ -126,4 +126,75 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${PASS_DEFAULT}
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
       EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING: zookeeper:2181
+    restart: unless-stopped
+  elasticsearch:
+    image: elasticsearch:8.6.2
+    container_name: elasticsearch
+    healthcheck:
+      test: nc -z localhost 9200 || exit -1
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    ports:
+      - 9200:9200
+    environment:
+      xpack.security.enabled: false
+      discovery.type: single-node
+    volumes:
+      - ./elasticsearch:/usr/share/elasticsearch/data
+    restart: unless-stopped
+  kibana:
+    image: kibana:8.6.2
+    container_name: kibana
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    ports:
+      - 5601:5601
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    volumes:
+      - ./kibana:/usr/share/kibana/data
+    restart: unless-stopped
+  kafka-connect:
+    image: confluentinc/cp-kafka-connect:7.3.2
+    container_name: kafka-connect
+    healthcheck:
+      test: nc -z localhost 8083 || exit -1
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      kafka:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    ports:
+      - 8083:8083
+    command:
+      - bash
+      - -c
+      - |
+        confluent-hub install --no-prompt confluentinc/kafka-connect-elasticsearch:14.0.5
+        /etc/confluent/docker/run & sleep infinity
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: kafka:29092
+      CONNECT_GROUP_ID: connect-cluster
+      CONNECT_CONFIG_STORAGE_TOPIC: connect-configs
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_TOPIC: connect-status
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
+      CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components
+
+      #CONNECTOR
+      BANKREGISTRATION_SINK_TOPIC: com.company.bankregistration.service.model.entities.BankCustomerData
+      BANKREGISTRATION_SINK_URL: http://elasticsearch:9200
     restart: unless-stopped

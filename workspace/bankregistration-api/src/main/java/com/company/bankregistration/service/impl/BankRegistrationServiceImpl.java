@@ -27,17 +27,22 @@ public class BankRegistrationServiceImpl implements BankRegistrationService {
 	private BankCustomerDataRepository bankCustomerDataRepository; 
 	
 	@Override
-	public void registerBankClientData(Long customerId, Long clientId, String bpId, String digitalBankId) {
+	public void registerBankClientData(Long customerId, Long clientId, String bpId,
+			String digitalBankId) {
 		BankCustomerData bankCustomerData = new BankCustomerData(clientId, bpId, digitalBankId);
 		bankCustomerData.setBankEnrolled(true);
 		bankCustomerData.setCustomerId(customerId);
 		bankCustomerDataRepository.save(bankCustomerData);
 
 		BankCustomerDataCreated bankCustomerDataCreated = new BankCustomerDataCreated(
-				bankCustomerData.getBankCustomerDataId(), bankCustomerData.getClientId(), bankCustomerData.getBpId(),
+				bankCustomerData.getBankCustomerDataId(), bankCustomerData.getClientId(),
+				bankCustomerData.getBpId(),
 				bankCustomerData.getDigitalBankId(), bankCustomerData.getCustomerId());
-		EventThreadContextUtils.populateFromSlf4jMDCData(bankCustomerDataCreated);
-		domainEventPublisher.publish(BankCustomerData.class, bankCustomerData.getBankCustomerDataId(),
+
+		domainEventPublisher.publish(
+				BankCustomerData.class.getName(),
+				bankCustomerData.getBankCustomerDataId(),
+				EventThreadContextUtils.getEventHeadersFromSlf4jMDCData(),
 				List.of(bankCustomerDataCreated));
 
 		LOGGER.info("BankClientData created successfully");
