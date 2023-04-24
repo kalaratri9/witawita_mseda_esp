@@ -25,4 +25,4 @@ eventuatelocal:
       servers: ${EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS}
   zookeeper:
     connection:
-      string: zookeeper:2181
+      string: ${EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING}
