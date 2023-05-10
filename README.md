@@ -21,7 +21,7 @@ mvn clean package
 docker-compose up -d
 ```
 
-## Kafka Connect Service
+## Kafka Connect (Connector)
 ```shell
 docker exec -it kafka-connect bash
 curl -X POST http://localhost:8083/connectors -H 'Content-Type: application/json' -d \
@@ -40,8 +40,102 @@ curl -X POST http://localhost:8083/connectors -H 'Content-Type: application/json
     "value.converter.schemas.enable": false,
     "key.ignore": true,
     "schema.ignore": true,
-    "schemas.enable": false
+    "schemas.enable": false,
+    "flush.synchronously": true,
+    "transforms": "timestampRouter",
+    "transforms.timestampRouter.type": "org.apache.kafka.connect.transforms.TimestampRouter",
+    "transforms.timestampRouter.topic.format": "${topic}-${timestamp}",
+    "transforms.timestampRouter.timestamp.format": "yyyyMMdd"
   }
+}'
+```
+
+## Elasticsearch (Template)
+```shell
+curl -X PUT http://localhost:9200/_index_template/aootb_template -H 'Content-Type: application/json' -d \
+'{
+    "index_patterns": [
+        "com.company.*"
+    ],
+    "template": {
+        "settings": {
+            "number_of_shards": 1
+        },
+        "mappings": {
+            "_source": {
+                "enabled": true
+            },
+            "properties": {
+                "headers": {
+                    "type": "object",
+                    "properties": {
+                        "DATE": {
+                            "type": "date",
+                            "format": "EEE, dd MMM yyyy HH:mm:ss z||EEE, d MMM yyyy HH:mm:ss z"
+                        },
+                        "event-aggregate-id": {
+                            "type": "integer"
+                        },
+                        "event-aggregate-type": {
+                            "type": "keyword"
+                        },
+                        "event-type": {
+                            "type": "keyword"
+                        },
+                        "hostname": {
+                            "type": "keyword"
+                        },
+                        "message-id": {
+                            "type": "keyword"
+                        },
+                        "request-uri": {
+                            "type": "keyword"
+                        },
+                        "user-agent": {
+                            "type": "keyword"
+                        },
+                        "x-app-version": {
+                            "type": "version"
+                        },
+                        "x-callerip": {
+                            "type": "ip"
+                        },
+                        "x-geoposition": {
+                            "type": "geo_point"
+                        },
+                        "x-user-device-id": {
+                            "type": "keyword"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}'
+```
+
+## Kibana (Dashboard)
+```shell
+#The "Atomic32OutOfTheBoxDashboards.ndjson" file is located in the root of the project
+
+curl -X POST http://localhost:5601/api/saved_objects/_import?createNewCopies=true \
+-H "kbn-xsrf: true" --form file=@Atomic32OutOfTheBoxDashboards.ndjson
+```
+
+## Bank Registration (API)
+```shell
+curl -X POST 'http://localhost:8066/customers/bank-client-data' \
+-H 'x-callerip: 203.0.113.195' \
+-H 'x-geoposition: 19.40423423, -99.0023423423' \
+-H 'x-app-version: 1.0' \
+-H 'x-user-device-id: 69e2ef62-f5e0-4a22-b741-cceb8793383e' \
+-H 'Content-Type: application/json' \
+-d \
+'{
+    "digitalBankId": "09870987",
+    "clientId": 9876,
+    "customerId": 1234,
+    "bpId": "09809709"
 }'
 ```
 

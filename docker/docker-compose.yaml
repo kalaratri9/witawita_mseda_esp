@@ -129,7 +129,7 @@ services:
       EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING: zookeeper:2181
     restart: unless-stopped
   elasticsearch:
-    image: elasticsearch:8.6.2
+    image: elasticsearch:8.7.0
     container_name: elasticsearch
     healthcheck:
       test: nc -z localhost 9200 || exit -1
@@ -145,7 +145,7 @@ services:
       - ./elasticsearch:/usr/share/elasticsearch/data
     restart: unless-stopped
   kibana:
-    image: kibana:8.6.2
+    image: kibana:8.7.0
     container_name: kibana
     depends_on:
       elasticsearch:
